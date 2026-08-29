@@ -1,14 +1,3 @@
-## ⚠第三方SDK授权说明
->本作业原型使用 **AR Foundation + ARCore** 实现AR平面检测，**项目源码不依赖 EasyAR Sense SDK**。
-前期调试过程访问过EasyAR开发中心网页，截图中的 `Sense License Key` 为个人授权凭证，**没有提交到本仓库源码中**。
-
-- 真实密钥占位：`[REDACTED: EasyAR Sense License Key]`
-- Android测试包名（网页登记）：`com.ar.demoreport`
-- 若开发者需要使用EasyAR，请到 [EasyAR开发中心](https://www.easyar.cn/) 自行申请个人版License，填写自己的License Key。
->⚠禁止将个人License Key明文上传至公开Git仓库，密钥泄露会导致授权失效。
-
->本项目不包含任何真实API‑Key、Token、账号凭证，所有敏感凭证均已脱敏处理。
-
 # Unity‑AR 园区巡检原型
 >实操作业原型：Unity AR放置标记上报问题 → Go后端持久化存储 → React‑TS管理后台查看、修改问题状态。
 
