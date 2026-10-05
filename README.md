@@ -1,47 +1,71 @@
-# Unity‑AR 园区巡检原型
->实操作业原型：Unity AR放置标记上报问题 → Go后端持久化存储 → React‑TS管理后台查看、修改问题状态。
+# Unity AR 园区巡检原型
 
-## 📋技术栈
-- Unity：Unity LTS，C#，AR Foundation / ARCore（安卓真机AR平面检测）
-- 后端：Golang，SQLite（数据持久化，重启数据不丢失）
-- 前端管理端：React + TypeScript
-- 数据存储：SQLite 文件数据库
+> 用手机 AR 在真实环境里放置巡检标记、填写问题并上报的移动端原型。
+>
+> **仓库范围说明：本仓库仅包含 Unity AR 客户端（`unity-client/`）。** 原规划中的 Go 后端与 React 管理端尚未提交到本仓库。
 
-## 📁项目目录结构
-ar‑inspect‑repo
-├─ unity‑client/        # Unity 移动端源码
-├─ go‑server/           # Go 后端服务源码
-├─ react‑admin/         # React+TS 管理后台
-├─ AI_LOG.md            # AI 使用记录（作业要求）
-└─ README.md            # 本说明文档
+## 项目做什么
 
+巡检人员用手机对着场地扫描 → 识别出水平平面 → 点击放置一个标记球 → 在弹出的表单里填写问题 → 标记与问题位置一一绑定。目的是把「巡检发现问题」从纸笔记录变成带着空间坐标的结构化数据。
 
-## ✨已完成功能
-### Unity移动端
-1. AR Foundation识别真实环境水平平面；点击平面放置标记物体；
-2. 表单填写巡检问题：title(必填)、description、priority(low/medium/high)；
-3. 收集标记世界坐标，HTTP POST上报Go后端；提交成功/失败UI提示；
-4. UI交互防误触：点击输入框/按钮不会触发AR放置标记；
+## 技术栈
 
-### Go后端
-1. `/api/health` 健康检查接口；
-2. `/api/issues` POST：接收上报巡检问题，参数校验；自动生成ID，status默认`open`；
-3. `/api/issues` GET：获取全部问题列表；
-4. `/api/issues/:id` PATCH：修改问题状态（open / in_progress / resolved）；
-5. SQLite持久化存储，服务重启数据保留；开启CORS允许浏览器跨域访问；
+- **客户端**：Unity LTS + C#，AR Foundation / ARCore（Android 真机平面检测）
+- **数据**：标记的世界坐标由 `ARMarkerPlacer` 采集，随表单一并记录
 
-### React管理端
-1. 请求后端获取巡检问题列表；展示标题、优先级、状态；
-2. 下拉修改问题处理状态，调用后端更新；
-3. 后端服务不可用时页面输出错误提示，不会白屏。
+## 目录结构
 
-## ❌未完成 / 已知问题
->1. Unity未实现历史标记重新加载；
->2. 无登录权限模块；
->3. 仅支持安卓ARCore真机，iOS未适配。
+```text
+Unity-AR-Inspect-Task/
+├── unity-client/
+│   ├── Assets/
+│   │   ├── Scripts/
+│   │   │   ├── ARMarkerPlacer.cs      # 平面射线检测 + 标记放置
+│   │   │   └── ReportUIManager.cs     # 上报表单 UI
+│   │   ├── AVAilabilityChecker.cs     # AR 能力可用性检查
+│   │   ├── SceneJump.cs / SceneSwitcher.cs   # 场景切换
+│   │   ├── CloseForm.cs / JumpBtn.cs         # 表单与按钮交互
+│   │   ├── VirtualPlace.cs / TestDemo.cs
+│   │   ├── Scenes/                    # 场景文件
+│   │   └── Plugins/Android/           # AndroidManifest 等
+│   ├── Packages/manifest.json         # AR Foundation 等包依赖
+│   └── ProjectSettings/               # Unity 项目设置（版本见 ProjectVersion.txt）
+├── AI_LOG.md                          # 开发过程与排错记录
+└── README.md
+```
 
-## 🚀启动步骤
-### 1. Go后端
-```bash
-cd go‑server
-go run main.go
+## 已完成功能
+
+1. **平面识别**：AR Foundation 检测真实环境的水平平面（`TrackableType.PlaneWithinPolygon`）。
+2. **点击放置标记**：射线检测命中平面后放置标记物体；已有标记时移动到新的命中位置，而不是重复实例化。
+3. **上报表单**：点击标记弹出表单，包含标题、描述、优先级（low / medium / high）三个字段。
+4. **坐标采集**：提交时读取标记的世界坐标，与表单内容一起记录。
+5. **交互防误触**：点击输入框、按钮不会穿透到 AR 层触发新的标记放置。
+6. **AR 可用性检查与场景切换**：设备不支持 AR 时给出提示；含场景跳转逻辑。
+
+## 运行步骤
+
+1. Unity Hub 打开 `unity-client/` 目录（Unity 版本见 `unity-client/ProjectSettings/ProjectVersion.txt`）。
+2. 在 Player Settings 中切到 Android 平台，确认已安装 **AR Foundation** 与 **ARCore XR Plugin**（见 `Packages/manifest.json`）。
+3. 构建到支持 ARCore 的 Android 真机运行，首次启动需授予相机权限。
+4. 说明：AR 平面检测在真机才有意义，Unity 编辑器内的设备模拟器只能验证 UI 与场景逻辑。
+
+## 已知限制
+
+- **表单提交当前只做本地提示**：`ReportUIManager.OnSubmit()` 读取表单与实际坐标后写入提示文本，**尚未接入网络层**，数据不会上传到服务端。
+- Go 后端与 React 管理端不在本仓库中。
+- 不支持历史标记重新加载，退出应用后标记丢失。
+- 无登录 / 权限模块。
+- 仅适配 Android + ARCore，iOS（ARKit）未适配。
+- `ReportUIManager.cs` 内的中文字符串存在编码问题（显示为乱码），建议统一另存为 UTF-8。
+
+## 后续计划
+
+1. 抽出网络层，把表单与坐标 POST 到后端服务。
+2. 后端持久化 + 管理端查看/修改问题状态。
+3. 启动时按服务端数据重建历史标记。
+4. 补齐 iOS ARKit 适配。
+
+## 开发记录
+
+`AI_LOG.md` 记录了开发过程中几个真实卡点与排查过程（组件丢失、场景跳转后 Inspector 赋值失效等）及其验证方式。
